@@ -5,6 +5,13 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 
+// fix for esp v5
+#if(ESP_IDF_VERSION_MAJOR >= 5)
+#define GPIO_PIN_INTR_POSEDGE GPIO_INTR_POSEDGE
+#define GPIO_PIN_INTR_NEGEDGE GPIO_INTR_NEGEDGE
+#define gpio_matrix_in(a,b,c) gpio_iomux_in(a,b)
+#endif
+
 static void IRAM_ATTR gpio_isr_handler(void* arg) {
   const bool ret = 1; // dummy value to pass to queue
   xQueueHandle gpio_evt_queue = (xQueueHandle) arg; // find which queue to write
@@ -47,7 +54,7 @@ static esp_err_t ads1115_read_register(ads1115_t* ads, ads1115_register_addresse
   cmd = i2c_cmd_link_create();
   i2c_master_start(cmd); // generate start command
   i2c_master_write_byte(cmd,(ads->address<<1) | I2C_MASTER_READ,1); // specify address and read command
-  i2c_master_read(cmd, data, len, 0); // read all wanted data
+  i2c_master_read(cmd, data, len, (i2c_ack_type_t)NULL); // read all wanted data
   i2c_master_stop(cmd); // generate stop command
   ret = i2c_master_cmd_begin(ads->i2c_port, cmd, ads->max_ticks); // send the i2c command
   i2c_cmd_link_delete(cmd);
@@ -88,8 +95,8 @@ void ads1115_set_rdy_pin(ads1115_t* ads, gpio_num_t gpio) {
   io_conf.intr_type = GPIO_PIN_INTR_NEGEDGE; // positive to negative (pulled down)
   io_conf.pin_bit_mask = 1<<gpio;
   io_conf.mode = GPIO_MODE_INPUT;
-  io_conf.pull_up_en = 1;
-  io_conf.pull_down_en = 0;
+  io_conf.pull_up_en = (gpio_pullup_t)1;
+  io_conf.pull_down_en = (gpio_pulldown_t)0;
   gpio_config(&io_conf); // set gpio configuration
 
   ads->rdy_pin.gpio_evt_queue = xQueueCreate(1, sizeof(bool));
