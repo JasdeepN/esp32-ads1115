@@ -1,4 +1,3 @@
-
 #include "ads1115.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -9,7 +8,6 @@
 #if(ESP_IDF_VERSION_MAJOR >= 5)
 #define GPIO_PIN_INTR_POSEDGE GPIO_INTR_POSEDGE
 #define GPIO_PIN_INTR_NEGEDGE GPIO_INTR_NEGEDGE
-#define gpio_matrix_in(a,b,c) gpio_iomux_in(a,b)
 #endif
 
 static void IRAM_ATTR gpio_isr_handler(void* arg) {
